@@ -116,12 +116,12 @@ def agent_loop(messages: list):
 # ── Entry point ──────────────────────────────────────────
 if __name__ == "__main__":
     print("s01: Agent Loop")
-    print("输入问题，回车发送。输入 q 退出。\n")
+    print("Type your question and press Enter to send. Type q to quit.\n")
 
     history = []
     while True:
         try:
-            query = input("\033[36ms01 >> \033[0m")
+            query = input("\001\033[36m\002s01 >> \001\033[0m\002")
         except (EOFError, KeyboardInterrupt):
             break
         if query.strip().lower() in ("q", "exit", ""):
