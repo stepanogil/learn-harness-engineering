@@ -1,29 +1,20 @@
 #!/usr/bin/env python3
 """
-s02: Tool Use — 在 s01 基础上新增 4 个工具 + 分发映射。
+s02: Tool Use — builds on s01 by adding 4 new tools + a dispatch map.
 
-运行: python s02_tool_use/code.py
-需要: pip install anthropic python-dotenv + .env 中配置 ANTHROPIC_API_KEY
+Run: python s02_tool_use/code.py
+Requires: pip install anthropic python-dotenv + ANTHROPIC_API_KEY in .env
 
-本文件 = s01 的全部代码 + 以下新增:
-  + run_read / run_write / run_edit / run_glob 四个工具实现
-  + TOOL_HANDLERS 分发映射（替代 s01 中硬编码的 run_bash 调用）
-  + safe_path 路径安全校验
+This file = all of s01 + the following additions:
+  + run_read / run_write / run_edit / run_glob tool implementations
+  + TOOL_HANDLERS dispatch map (replaces the hardcoded run_bash call in s01)
+  + safe_path path safety check
 
-循环本身（agent_loop）与 s01 完全一致。
+The loop itself (agent_loop) is identical to s01.
 """
 
 import os, subprocess
 from pathlib import Path
-
-try:
-    import readline
-    readline.parse_and_bind('set bind-tty-special-chars off')
-    readline.parse_and_bind('set input-meta on')
-    readline.parse_and_bind('set output-meta on')
-    readline.parse_and_bind('set convert-meta off')
-except ImportError:
-    pass
 
 from anthropic import Anthropic
 from dotenv import load_dotenv
@@ -40,7 +31,7 @@ SYSTEM = f"You are a coding agent at {WORKDIR}. Use tools to solve tasks. Act, d
 
 
 # ═══════════════════════════════════════════════════════════
-#  FROM s01 (unchanged)
+#  FROM s01 — unchanged
 # ═══════════════════════════════════════════════════════════
 
 def run_bash(command: str) -> str:
@@ -59,7 +50,7 @@ def run_bash(command: str) -> str:
 
 
 # ═══════════════════════════════════════════════════════════
-#  NEW in s02: 4 个新工具
+#  NEW in s02 — 4 new tools
 # ═══════════════════════════════════════════════════════════
 
 def safe_path(p: str) -> Path:
@@ -114,7 +105,7 @@ def run_glob(pattern: str) -> str:
 
 
 # ═══════════════════════════════════════════════════════════
-#  NEW in s02: 工具定义（s01 只有一个 bash，现在扩展到 5 个）
+#  NEW in s02 — tool definitions (s01 had only bash; now 5 tools)
 # ═══════════════════════════════════════════════════════════
 
 TOOLS = [
@@ -131,7 +122,7 @@ TOOLS = [
 ]
 
 # ═══════════════════════════════════════════════════════════
-#  NEW in s02: 工具分发映射（s01 是硬编码 run_bash，现在改为查表）
+#  NEW in s02 — dispatch map (s01 hardcoded run_bash; now a lookup table)
 # ═══════════════════════════════════════════════════════════
 
 TOOL_HANDLERS = {
@@ -141,7 +132,7 @@ TOOL_HANDLERS = {
 
 
 # ═══════════════════════════════════════════════════════════
-#  agent_loop — 与 s01 结构完全一致，只改了工具执行那部分
+#  agent_loop — identical structure to s01; only the tool dispatch changed
 #  s01: output = run_bash(block.input["command"])
 #  s02: output = TOOL_HANDLERS[block.name](**block.input)
 # ═══════════════════════════════════════════════════════════
@@ -170,13 +161,13 @@ def agent_loop(messages: list):
 
 
 if __name__ == "__main__":
-    print("s02: Tool Use — 在 s01 基础上加了 4 个工具")
-    print("输入问题，回车发送。输入 q 退出。\n")
+    print("s02: Tool Use — extends s01 with 4 new tools")
+    print("Type a question and press Enter. Type q to quit.\n")
 
     history = []
     while True:
         try:
-            query = input("\033[36ms02 >> \033[0m")
+            query = input("\033[36ms02> \033[0m")
         except (EOFError, KeyboardInterrupt):
             break
         if query.strip().lower() in ("q", "exit", ""):

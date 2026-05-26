@@ -30,15 +30,6 @@ Usage:
 import os
 import subprocess
 
-try:
-    import readline
-    # macOS 的 libedit 在处理中文输入时有退格问题，这四行修复它
-    readline.parse_and_bind('set bind-tty-special-chars off')
-    readline.parse_and_bind('set input-meta on')
-    readline.parse_and_bind('set output-meta on')
-    readline.parse_and_bind('set convert-meta off')
-except ImportError:
-    pass
 
 from anthropic import Anthropic
 from dotenv import load_dotenv
