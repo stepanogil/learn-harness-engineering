@@ -126,8 +126,11 @@ TOOLS = [
 # ═══════════════════════════════════════════════════════════
 
 TOOL_HANDLERS = {
-    "bash": run_bash, "read_file": run_read, "write_file": run_write,
-    "edit_file": run_edit, "glob": run_glob,
+    "bash": run_bash, 
+    "read_file": run_read, 
+    "write_file": run_write,
+    "edit_file": run_edit, 
+    "glob": run_glob,
 }
 
 
@@ -151,10 +154,13 @@ def agent_loop(messages: list):
         results = []
         for block in response.content:
             if block.type == "tool_use":
-                print(f"\033[33m> {block.name} {block.input}\033[0m")
+                print(f"\033[33m> {block.name}: {block.input}\033[0m")
                 handler = TOOL_HANDLERS.get(block.name)
                 output = handler(**block.input) if handler else f"Unknown: {block.name}"
-                print(str(output)[:200])
+                _out = str(output)
+                # truncate long output but show how many characters were dropped
+                _suffix = f" (... {len(_out) - 200} characters more)" if len(_out) > 200 else ""
+                print(_out[:200] + _suffix)
                 results.append({"type": "tool_result", "tool_use_id": block.id, "content": output})
 
         messages.append({"role": "user", "content": results})
@@ -167,13 +173,20 @@ if __name__ == "__main__":
     history = []
     while True:
         try:
+            # user input
             query = input("\033[36ms02> \033[0m")
         except (EOFError, KeyboardInterrupt):
             break
+        # exit commands
         if query.strip().lower() in ("q", "exit", ""):
             break
+        # add query to messages list
         history.append({"role": "user", "content": query})
+
+        # process messages list in agent loop
         agent_loop(history)
+
+        # agent loop outputs messages list with LLM text completion as last element; print last element as the AI reply
         for block in history[-1]["content"]:
             if getattr(block, "type", None) == "text":
                 print(block.text)
