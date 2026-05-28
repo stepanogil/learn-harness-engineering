@@ -30,15 +30,6 @@ Builds on s02 (multi-tool). Usage:
 import os, subprocess
 from pathlib import Path
 
-try:
-    import readline
-    readline.parse_and_bind('set bind-tty-special-chars off')
-    readline.parse_and_bind('set input-meta on')
-    readline.parse_and_bind('set output-meta on')
-    readline.parse_and_bind('set convert-meta off')
-except ImportError:
-    pass
-
 from anthropic import Anthropic
 from dotenv import load_dotenv
 
@@ -215,17 +206,26 @@ def agent_loop(messages: list):
             if block.type != "tool_use":
                 continue
 
-            print(f"\033[36m> {block.name}\033[0m")
+            # print tool call details
+            print(f"\033[33m> {block.name}: {block.input}\033[0m")
 
             # s03 change: run through permission pipeline before executing
             if not check_permission(block):
+                # if user denied permission, pass 'Permission denied' message to AI and continue loop
                 results.append({"type": "tool_result", "tool_use_id": block.id,
                                 "content": "Permission denied."})
                 continue
 
+            
             handler = TOOL_HANDLERS.get(block.name)
+
+            # run selected tool
             output = handler(**block.input) if handler else f"Unknown: {block.name}"
-            print(str(output)[:200])
+            
+            # truncate long output but show how many characters were dropped
+            _out = str(output)            
+            _suffix = f" (... {len(_out) - 200} characters more)" if len(_out) > 200 else ""
+            print(_out[:200] + _suffix)
             results.append({"type": "tool_result", "tool_use_id": block.id, "content": output})
 
         messages.append({"role": "user", "content": results})
@@ -233,7 +233,7 @@ def agent_loop(messages: list):
 
 if __name__ == "__main__":
     print("s03: Permission")
-    print("输入问题，回车发送。输入 q 退出。\n")
+    print("Type your question and press Enter. Type q to quit.\n")
 
     history = []
     while True:
