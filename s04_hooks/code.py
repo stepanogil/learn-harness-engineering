@@ -51,15 +51,6 @@ Needs: pip install anthropic python-dotenv + ANTHROPIC_API_KEY in .env
 import os, subprocess
 from pathlib import Path
 
-try:
-    import readline
-    readline.parse_and_bind('set bind-tty-special-chars off')
-    readline.parse_and_bind('set input-meta on')
-    readline.parse_and_bind('set output-meta on')
-    readline.parse_and_bind('set convert-meta off')
-except ImportError:
-    pass
-
 from anthropic import Anthropic
 from dotenv import load_dotenv
 
@@ -205,7 +196,7 @@ def log_hook(block):
 
 def large_output_hook(block, output):
     """PostToolUse: warn on large output."""
-    if len(str(output)) > 100000:
+    if len(str(output)) > 10_000:
         print(f"\033[33m[HOOK] ⚠ Large output from {block.name}: {len(str(output))} chars\033[0m")
     return None
 
