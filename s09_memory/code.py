@@ -593,7 +593,7 @@ def agent_loop(messages: list):
         results = []
         for block in response.content:
             if block.type != "tool_use": continue
-            print(f"\033[36m> {block.name}\033[0m")
+            print(f"\033[36m> {block.name}: {block.input}\033[0m")
             handler = TOOL_HANDLERS.get(block.name)
             output = handler(**block.input) if handler else f"Unknown: {block.name}"
             print(str(output)[:200])

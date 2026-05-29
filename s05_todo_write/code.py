@@ -31,12 +31,6 @@ Needs: pip install anthropic python-dotenv + ANTHROPIC_API_KEY in .env
 import os, subprocess, json
 from pathlib import Path
 
-try:
-    import readline
-    readline.parse_and_bind('set bind-tty-special-chars off')
-except ImportError:
-    pass
-
 from anthropic import Anthropic
 from dotenv import load_dotenv
 
@@ -189,7 +183,7 @@ def permission_hook(block):
 
 def log_hook(block):
     """PreToolUse: log tool calls."""
-    print(f"\033[90m[HOOK] {block.name}\033[0m")
+    print(f"\033[90m[HOOK] {block.name}: {block.input}\033[0m")
     return None
 
 def context_inject_hook(query: str):
@@ -279,7 +273,7 @@ if __name__ == "__main__":
         if query.strip().lower() in ("q", "exit", ""):
             break
         trigger_hooks("UserPromptSubmit", query)
-        history.append({"role": "user", "content": query})
+        history.append({"role": "user", "content": query})        
         agent_loop(history)
         for block in history[-1]["content"]:
             if getattr(block, "type", None) == "text":

@@ -711,7 +711,7 @@ def agent_loop(messages: list, context: dict) -> dict:
         for block in response.content:
             if block.type != "tool_use":
                 continue
-            print(f"\033[36m> {block.name}\033[0m")
+            print(f"\033[36m> {block.name}: {block.input}\033[0m")
 
             if should_run_background(block.name, block.input):
                 bg_id = start_background_task(block)
