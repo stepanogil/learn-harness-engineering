@@ -31,12 +31,6 @@ Needs: pip install anthropic python-dotenv + ANTHROPIC_API_KEY in .env
 import os, subprocess, json
 from pathlib import Path
 
-try:
-    import readline
-    readline.parse_and_bind('set bind-tty-special-chars off')
-except ImportError:
-    pass
-
 from anthropic import Anthropic
 from dotenv import load_dotenv
 
