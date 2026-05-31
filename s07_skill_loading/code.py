@@ -29,12 +29,6 @@ Needs: pip install anthropic python-dotenv + ANTHROPIC_API_KEY in .env
 import os, subprocess, json
 from pathlib import Path
 
-try:
-    import readline
-    readline.parse_and_bind('set bind-tty-special-chars off')
-except ImportError:
-    pass
-
 from anthropic import Anthropic
 from dotenv import load_dotenv
 
@@ -94,7 +88,7 @@ def build_system() -> str:
     """Build SYSTEM prompt with skill catalog injected at startup."""
     catalog = list_skills()
     return (
-        f"You are a coding agent at {WORKDIR}. "
+        f"You are a coding agent at {WORKDIR}.\n"
         f"Skills available:\n{catalog}\n"
         "Use load_skill to get full details when needed."
     )
@@ -346,10 +340,17 @@ def agent_loop(messages: list):
         if rounds_since_todo >= 3 and messages:
             last = messages[-1]
             if last["role"] == "user" and isinstance(last.get("content"), list):
-                last["content"].insert(0, {
-                    "type": "text",
-                    "text": "<reminder>Update your todos.</reminder>",
-                })
+                # Find the last tool_result and append reminder to its content string.
+                # We cannot insert a text block here — the API requires that user messages
+                # following a tool_use assistant message contain ONLY tool_result blocks.
+                content = last["content"]
+                for i in range(len(content) - 1, -1, -1):
+                    block = content[i]
+                    if isinstance(block, dict) and block.get("type") == "tool_result":
+                        block["content"] = str(block.get("content", "")) + "\n\n<reminder>Update your todos.</reminder>"
+                        break
+                else:
+                    content.insert(0, {"type": "text", "text": "<reminder>Update your todos.</reminder>"})
 
         response = client.messages.create(
             model=MODEL, system=SYSTEM, messages=messages,
@@ -377,7 +378,10 @@ def agent_loop(messages: list):
                 continue
 
             handler = TOOL_HANDLERS.get(block.name)
-            output = handler(**block.input) if handler else f"Unknown: {block.name}"
+            try:
+                output = handler(**block.input) if handler else f"Unknown: {block.name}"
+            except Exception as e:
+                output = f"Error: {e}"
 
             trigger_hooks("PostToolUse", block, output)
 

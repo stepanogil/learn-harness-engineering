@@ -1916,8 +1916,21 @@ def agent_loop(messages: list, context: dict):
         inject_background_notifications(messages)
 
         if rounds_since_todo >= 3:
-            messages.append({"role": "user",
-                             "content": "<reminder>Update your todos.</reminder>"})
+            # Piggyback onto the last tool_result content — appending a standalone
+            # user message would create consecutive user messages, which the API rejects.
+            last = messages[-1] if messages else None
+            if last and last["role"] == "user" and isinstance(last.get("content"), list):
+                content = last["content"]
+                for i in range(len(content) - 1, -1, -1):
+                    block = content[i]
+                    if isinstance(block, dict) and block.get("type") == "tool_result":
+                        block["content"] = str(block.get("content", "")) + "\n\n<reminder>Update your todos.</reminder>"
+                        break
+                else:
+                    content.insert(0, {"type": "text", "text": "<reminder>Update your todos.</reminder>"})
+            elif last and last["role"] == "user":
+                messages.append({"role": "user",
+                                 "content": "<reminder>Update your todos.</reminder>"})
             rounds_since_todo = 0
 
         prepare_context(messages)
